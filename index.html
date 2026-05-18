@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Portfolyo</title>
+    
+    <!-- Modern bir görünüm için Inter fontunu Google Fonts'tan çekiyoruz -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            background-color: #0A66C2; /* Tam LinkedIn Mavisi (#0A66C2) */
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+        }
+
+        .header-title {
+            color: white;
+            font-size: clamp(2rem, 5vw, 4rem); /* Ekran boyutuna göre otomatik ayarlanır */
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            letter-spacing: 2px;
+            z-index: 1; /* Parçacıkların önünde durmasını sağlar */
+            padding: 0 20px;
+        }
+
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Yan yana 2 sütun */
+            grid-template-rows: repeat(2, 1fr); /* Alt alta 2 satır */
+            gap: 30px; /* Kutular arası boşluk */
+            width: 90vw;
+            max-width: 1000px;
+            z-index: 1; /* Parçacıkların önünde durmasını sağlar */
+        }
+
+        .grid-cell {
+            display: flex;
+            justify-content: center;
+            align-items: stretch; /* Kutuların içeriklerine göre uzamasını engeller, hepsini aynı boyda yapar */
+            width: 100%;
+        }
+
+        .name-link {
+            color: white;
+            text-decoration: none;
+            font-size: clamp(1.2rem, 3.5vw, 2rem);
+            line-height: 1.4;
+            font-weight: 600;
+            padding: 20px 50px 20px 30px; /* Sağdan ikon için ekstra boşluk bırakıldı */
+            background: rgba(255, 255, 255, 0.1); /* Hafif saydam beyaz */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px; /* Yuvarlak kenarlar */
+            backdrop-filter: blur(8px); /* Cam efekti */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 120px; /* Tüm kutular minimum bu boyutta olacak, hepsi eşit duracak */
+            box-sizing: border-box;
+            white-space: normal; /* İsimler uzunsa alt satıra geçmesine izin ver */
+            position: relative; /* İçindeki absolut pozisyonlu ikon için referans noktası */
+        }
+
+        .name-link:hover {
+            transform: scale(1.05); /* Üzerine gelindiğinde hafifçe büyüt */
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(255, 255, 255, 0.5); /* Parlama efekti */
+        }
+
+        .linkedin-icon {
+            position: absolute;
+            top: 20px;
+            right: 25px; /* İkonu sağ üst köşeye sabitledik */
+            width: 24px;
+            height: 24px;
+            fill: rgba(255, 255, 255, 0.7); /* Başlangıçta hafif saydam */
+            transition: fill 0.3s ease, transform 0.3s ease;
+        }
+
+        .name-link:hover .linkedin-icon {
+            fill: #ffffff; /* Kutunun üzerine gelince ikon da tam parlak beyaz olsun */
+            transform: scale(1.1); /* İkonu da biraz büyüt */
+        }
+
+        @media (max-width: 768px) {
+            #grid-container {
+                grid-template-columns: 1fr; /* Mobilde tek sütun alt alta */
+                gap: 20px;
+            }
+            .header-title {
+                margin-top: 40px; /* Mobilde yukarıdan biraz daha boşluk bırak */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Arka plan animasyonu için Canvas alanı -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Ana Başlık -->
+    <div class="header-title">BAĞLANTIDA KALALIM !</div>
+
+    <!-- İsimlerin sıralanacağı ızgara (Grid) bölümü -->
+    <div id="grid-container">
+        <!-- İsim kutucukları JavaScript tarafından buraya eklenecek -->
+    </div>
+
+    <script>
+        // İsimler ve Linkleri içeren verilerimiz
+        const profileData = [
+            {
+                name: "Zeynep Asude ERGÜN",
+                link: "https://www.linkedin.com/in/zeynep-asude-erg%C3%BCn-532b122a6/"
+            },
+            {
+                name: "Gamze SOYSAL",
+                link: "https://www.linkedin.com/in/gamze-soysal-845a0825a/"
+            },
+            {
+                name: "Engin Cemal MENGÜÇ",
+                link: "https://www.linkedin.com/in/prof-dr-engin-cemal-meng%C3%BC%C3%A7-40402b199/"
+            },
+            {
+                name: "Buket ÇOLAK GÜVENÇ",
+                link: "https://www.linkedin.com/in/buket-%C3%A7-9b2b24123/"
+            }
+        ];
+
+        // Grid yapısını ve içindeki isimleri/ikonları oluşturan fonksiyon
+        function initGrid() {
+            const container = document.getElementById('grid-container');
+            
+            // Orijinal LinkedIn SVG Logosu kodumuz
+            const svgIcon = `
+                <svg class="linkedin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+            `;
+
+            profileData.forEach((profile) => {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+
+                const el = document.createElement('a');
+                el.className = 'name-link';
+                el.innerHTML = `<span>${profile.name}</span> ${svgIcon}`; // İsmi ve ikonu ekle
+                el.href = profile.link; // Tıklanıldığında gidilecek LinkedIn adresi
+                el.target = '_blank'; // Yeni sekmede açması için
+                el.rel = 'noopener noreferrer'; // Güvenlik için
+
+                cell.appendChild(el);
+                container.appendChild(cell);
+            });
+        }
+
+        // Hareketli beyaz noktalar (Canvas Animasyonu) için gerekli kodlar
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particlesArray;
+
+        // Canvas'ı sayfa boyutlarına eşitle
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Pencere boyutu değişirse canvas'ı tekrar boyutlandır
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initCanvas(); // Ekran boyutu değiştiğinde parçacıkları yeniden oluştur
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2.5 + 0.5; // Parçacık boyutu
+                this.speedX = Math.random() * 1 - 0.5; // Hız X düzlemi
+                this.speedY = Math.random() * 1 - 0.5; // Hız Y düzlemi
+                this.opacity = Math.random() * 0.5 + 0.1; // Şeffaflık
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Sonsuz döngü (ekrandan çıkan diğer taraftan girer)
+                if (this.x > canvas.width) this.x = 0;
+                else if (this.x < 0) this.x = canvas.width;
+                
+                if (this.y > canvas.height) this.y = 0;
+                else if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initCanvas() {
+            particlesArray = [];
+            // Ekran boyutuna göre noktacık sayısını belirle
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+            }
+            requestAnimationFrame(animateCanvas);
+        }
+
+        // Sayfa yüklendiğinde çalışacaklar
+        window.onload = () => {
+            initGrid(); // İsim kutularını oluştur
+            initCanvas(); // Arka plan parçacıklarını oluştur
+            animateCanvas(); // Animasyonu başlat
+        };
+    </script>
+</body>
+</html>
